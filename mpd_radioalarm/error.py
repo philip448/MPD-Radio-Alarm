@@ -1,0 +1,8 @@
+def ERR_INVALID_SESSION_TOKEN():
+    return ERR_INVALID_SESSION_TOKEN.__name__
+
+def ERR_USER_NOT_FOUND():
+    return ERR_USER_NOT_FOUND.__name__
+
+def ERR_INVALID_PASSWORD():
+    return ERR_INVALID_PASSWORD.__name__

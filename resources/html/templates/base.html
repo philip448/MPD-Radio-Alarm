@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{ static_url('css/bootstrap.min.css') }}" type="text/css" rel="stylesheet">
+        <link href="{{ static_url('css/main.css') }}" type="text/css" rel="stylesheet">
+        <meta charset="utf-8">
+
+        {% block head %}
+            <title>Title not set</title>
+        {% end %}
+    </head>
+    <body>
+        {% block header %}
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-main-navbar">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">MPD Alarm Clock</a>
+                    </div>
+                    <div class="collapse navbar-collapse" id="bs-main-navbar">
+                        <ul class="nav navbar-nav">
+                            <li>
+                                <a href="/play">Play</a>
+                            </li>
+                            <li>
+                                <a href="/manage-media">Manage media</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        {% end %}
+        {% block error %}
+            {% for err in handler.error_messages %}
+                <p style="color:red">{{ err }}</p>
+            {% end %}
+        {% end %}
+        <div class="container">
+            {% block content %}
+                Blank page
+            {% end %}
+        </div>
+
+        <footer>
+            {% block footer %}
+                (c) 2016 Philip Stoop
+            {% end %}
+        </footer>
+    </body>
+</html>
