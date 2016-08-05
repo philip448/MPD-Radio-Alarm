@@ -1,64 +1,75 @@
-MPClient = function() {
-    var debug = {{ debug }};
+RPCClient = function () {
     var ws;
-    var subscriptions = {}
-    var wait_response = {};
-
     var connection_established = false;
+    var self = this;
 
-    var generate_id = function() {
-        return Math.random().toString(36).substring(7);
+    var open_calls = {};
+    var subscriptions = {};
+
+
+    var message_types = {
+        response: function (data) {
+            var id = data.id;
+            if (open_calls[id]) {
+                open_calls[id](data.data);
+                delete open_calls[id];
+            }
+        },
+
+        update: function (data) {
+            var topic = data.topic;
+            if (subscriptions[topic]) {
+                subscriptions[topic].forEach(function (fn) {
+                    fn(data.data);
+                });
+            }
+        }
     };
 
-    this.connect = function (callback) {
-        ws = new WebSocket("{{ ws_url }}");
-        ws.onopen = function() {
-            callback();
+    function generate_id() {
+        return Math.random().toString(36).substring(7);
+    }
 
-            window.onbeforeunload = function() {
+    function on_message(message) {
+        data = JSON.parse(message);
+
+        var func = message_types[data.type];
+        if (!func) {
+            throw "Invalid message type: " + data.type;
+        }
+
+        func(data);
+    }
+
+    this.connect = function (url, callback) {
+        ws = new WebSocket(url);
+        ws.onopen = function () {
+            window.onbeforeunload = function () {
                 ws.close();
             };
+            connection_established = true;
+            if (callback) {
+                callback();
+            }
         };
 
         ws.onmessage = function (evt) {
-            data = JSON.parse(evt.data);
-
-
-
-            switch(data.type) {
-                case "update":
-                    var topic = data.topic;
-                    if (subscriptions[topic]) {
-                        subscriptions[topic].forEach(function(fn){
-                            fn(data.data);
-                        });
-                    }
-                    break;
-
-                case "response":
-                    var id = data.id;
-                    if(wait_response[id]) {
-                        wait_response[id](data.data);
-                        delete wait_response;
-                    }
-                    break;
-            }
+            on_message(evt.data);
         };
-    }; // end connect
+    };
 
-
-        // Public functions
-
-
-    this.call = function(command, arguments, callback) {
+    this.call = function (command, arguments, callback) {
         if (!connection_established) {
-            throw new Exception()
-            return;
+            throw "Connection not ready";
         }
 
         var id = generate_id();
 
-        wait_response[id] = callback;
+        open_calls[id] = function(data) {
+            if (callback) {
+                callback(data);
+            }
+        };
 
         msg = {
             type: "call",
@@ -72,13 +83,19 @@ MPClient = function() {
         ws.send(JSON.stringify(msg));
     };
 
-    this.subscribe = function(topic, func) {
-        this.call('subscribe', {topic: topic}, function(evt) {
-             if (!subscriptions[topic]) {
+    this.subscribe = function (topic, func, on_success) {
+        this.call('subscribe', { topic: topic }, function (evt) {
+            if (!subscriptions[topic]) {
                 subscriptions[topic] = [];
-             }
+            }
 
-             subscriptions[topic].push(func);
+            subscriptions[topic].push(func);
+
+            if (on_success) {
+                on_success();
+            }
         });
-    };
+    }
+
+
 };

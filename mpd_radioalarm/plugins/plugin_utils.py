@@ -1,6 +1,5 @@
-from websocket import add_command
+from mpd_radioalarm.websocket import add_command
 
-PLUGIN_NAME_UTILS = None
 
 def initialize():
-    add_command('echo', lambda response: response)
+    add_command('echo', lambda socket, response: response)

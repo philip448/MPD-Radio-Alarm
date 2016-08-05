@@ -12,6 +12,7 @@ setup(
     install_requires=[
         "tornado",
         "python-mpd2",
+        "jsonschema",
         "peewee",
         "uuid"
     ]

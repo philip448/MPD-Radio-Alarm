@@ -3,8 +3,9 @@ from tornado.gen import coroutine
 from peewee import DoesNotExist
 
 from mpd_radioalarm.error import *
-from mpd_radioalarm.data.model import User, Session
+from mpd_radioalarm.data.model import *
 from mpd_radioalarm.data import in_thread, password
+from mpd_radioalarm import config
 
 class BaseHandler(RequestHandler):
     def initialize(self):
@@ -38,14 +39,13 @@ class BaseHandler(RequestHandler):
             self.error_messages.append(ERR_INVALID_SESSION_TOKEN())
             return None
 
-
 class WebHandler(BaseHandler):
     def get(self):
         self.write("It works!")
 
 class PlayHandler(BaseHandler):
     def get(self):
-        self.write("Let's play")
+        self.render('play.html')
 
 class LoginHandler(BaseHandler):
     def prepare(self):
@@ -95,3 +95,33 @@ class LoginHandler(BaseHandler):
         session = yield create_session
         self.set_secure_cookie('session', session.token)
         return self.redirect(req)
+
+class ManageMediaHandler(BaseHandler):
+    @coroutine
+    def get(self):
+
+        @in_thread
+        def receive_data():
+            return BroadcastTransmitter.select()
+
+        bts = yield receive_data
+        self.render('manage-media/index.html', broadcast_transmitters=bts)
+
+    @coroutine
+    def post(self):
+        action = self.get_argument('action')
+        name = self.get_argument('name')
+
+        @in_thread
+        def update_data():
+            if action == 'add':
+                url = self.get_argument('url')
+                bt = BroadcastTransmitter.create(url=url, name=name)
+                bt.save()
+            elif action == 'delete':
+                bt = BroadcastTransmitter.get(name=name)
+                bt.delete_instance()
+
+        yield update_data
+
+        self.redirect('manage-media')

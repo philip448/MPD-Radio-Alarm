@@ -1,5 +1,9 @@
 HTTP_PORT=8080
 COOKIE_SECRET = "HELLO_WORLD"
+DEBUG=True
+
+MPD_HOST = 'localhost'
+MPD_PORT = 6600
 
 ROOT_USER_EMAIL = 'root@localhost'
 ROOT_USER_PASSWORD = 'password'

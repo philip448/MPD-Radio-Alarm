@@ -19,9 +19,15 @@ class Session(BaseModel):
     token = UUIDField(default=lambda: str(uuid4()))
     user = ForeignKeyField(User, related_name='sessions')
 
+
+class BroadcastTransmitter(BaseModel):
+    url = CharField()
+    name = CharField(unique=True)
+
 db.connect()
 db.create_tables([
     User,
-    Session
+    Session,
+    BroadcastTransmitter
 ], safe=True)
 

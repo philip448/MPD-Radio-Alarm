@@ -6,6 +6,8 @@ from mpd_radioalarm import config
 from mpd_radioalarm.handler import *
 from mpd_radioalarm.data.model import User
 from mpd_radioalarm.data import password
+from mpd_radioalarm.websocket import WebSocketHandler
+from mpd_radioalarm.plugins import import_plugins
 
 
 def create_root_user():
@@ -22,16 +24,17 @@ def create_root_user():
 def make_app():
 
     create_root_user()
-
     app = Application(
         [
             (r'/', WebHandler),
             (r'/login', LoginHandler),
-            ('r/play', PlayHandler)
+            (r'/play', PlayHandler),
+            (r'/ws', WebSocketHandler),
+            (r'/manage-media', ManageMediaHandler)
         ],
         static_path=config.STATIC_FILE_PATH,
         template_path=config.TEMPLATE_PATH,
-        debug=True,
+        debug=config.DEBUG,
         cookie_secret=config.COOKIE_SECRET
     )
 

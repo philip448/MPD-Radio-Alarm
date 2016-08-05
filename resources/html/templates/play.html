@@ -1,0 +1,50 @@
+{% extends "base.html" %} {% block content %}
+<script src="{{ static_url('js/ws_client/rpc_client.js') }}" type="text/javascript"></script>
+
+<div id="status"></div>
+
+<div class="btn-group">
+    <button id="btn_play">Play</button>
+    <button id="btn_pause">Pause</button>
+    <button id="btn_next">Next</button>
+    <button id="btn_previous">Previous</button>
+    <button id="btn_status">Status</button>
+    <button id="btn_currsong">Show song info</button>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    client = new RPCClient();
+    client.connect('ws://{{ request.host }}/ws', function() {
+        client.call('echo', {response: "Connected" }, function(evt) {
+            console.log(evt);
+
+            client.subscribe('mpd.currentsong', function(evt){
+                $('#status').html(evt);
+            });
+        });
+
+        $('#btn_play').click(function(){
+            client.call('mpd.play', {})
+        });
+
+        $('#btn_status').click(function(){
+            client.call('mpd.status', {}, function(evt){
+                window.alert(JSON.stringify(evt));
+                console.log(evt);
+            });
+        });
+
+        $('#btn_currsong').click(function(){
+            client.call('mpd.currsong', {}, function(evt){
+                console.log(evt);
+            });
+        });
+        
+    });
+});
+
+
+
+
+    </script> {% end %}
