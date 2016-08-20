@@ -1,7 +1,6 @@
 from peewee import *
 from mpd_radioalarm import config
 from uuid import uuid4
-
 db = SqliteDatabase(config.DATABASE_PATH)
 
 

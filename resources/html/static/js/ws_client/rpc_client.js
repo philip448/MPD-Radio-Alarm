@@ -6,7 +6,6 @@ RPCClient = function () {
     var open_calls = {};
     var subscriptions = {};
 
-
     var message_types = {
         response: function (data) {
             var id = data.id;
@@ -18,6 +17,7 @@ RPCClient = function () {
 
         update: function (data) {
             var topic = data.topic;
+
             if (subscriptions[topic]) {
                 subscriptions[topic].forEach(function (fn) {
                     fn(data.data);
@@ -31,6 +31,7 @@ RPCClient = function () {
     }
 
     function on_message(message) {
+        console.log('in: ' + message);
         data = JSON.parse(message);
 
         var func = message_types[data.type];

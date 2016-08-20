@@ -1,5 +1,5 @@
-from mpd_radioalarm.websocket import add_command
+from mpd_radioalarm.plugins import PluginBase
 
-
-def initialize():
-    add_command('echo', lambda socket, response: response)
+class UtilsPlugin(PluginBase):
+    def initialize(self):
+        self.server.add_command('echo', lambda socket, response: response)

@@ -3,23 +3,27 @@ from threading import Thread
 import hashlib
 
 from mpd_radioalarm import config
+from multiprocessing.pool import ThreadPool
+from tornado.ioloop import IOLoop
+
+MAX_WORKERS = 10
+_workers = ThreadPool(MAX_WORKERS)
 
 
 def in_thread(action):
-    f = Future()
+    def wrap(*args, **kwargs):
+        f = Future()
 
-    def wrapper():
-        try:
-            r = action()
+        def _callback(result):
+            f.set_result(result)
 
-            f.set_result(r)
-        except Exception as ex:
-            f.set_exception(ex)
+        def _error_callback(error):
+            f.set_exception(error)
 
-    t = Thread(target=wrapper)
-    t.start()
+        _workers.apply_async(action, args, kwargs, _callback, _error_callback)
+        return f
 
-    return f
+    return wrap
 
 
 def password(plain):

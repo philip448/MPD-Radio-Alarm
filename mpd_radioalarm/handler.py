@@ -15,10 +15,10 @@ class BaseHandler(RequestHandler):
     def prepare(self):
 
         @in_thread
-        def wrap():
+        def get_user():
             return self.get_current_user()
 
-        user = yield wrap
+        user = yield get_user()
 
         if not user:
             self.redirect('/login')
@@ -43,10 +43,6 @@ class WebHandler(BaseHandler):
     def get(self):
         self.write("It works!")
 
-class PlayHandler(BaseHandler):
-    def get(self):
-        self.render('play.html')
-
 class LoginHandler(BaseHandler):
     def prepare(self):
         pass
@@ -56,9 +52,9 @@ class LoginHandler(BaseHandler):
         req = self.get_argument('req', default='/')
 
         @in_thread
-        def wrap():
+        def get_user():
             return self.get_current_user()
-        user = yield wrap
+        user = yield get_user()
         if user:
             return self.redirect(req)
 
@@ -78,7 +74,7 @@ class LoginHandler(BaseHandler):
             except DoesNotExist:
                 return None
 
-        user = yield get_user
+        user = yield get_user()
         if not user:
             self.error_messages.append(ERR_USER_NOT_FOUND())
             return self.render('login.html', req=req)
@@ -92,36 +88,7 @@ class LoginHandler(BaseHandler):
             t = Session.create(user=user)
             t.save()
             return t
-        session = yield create_session
+        session = yield create_session()
         self.set_secure_cookie('session', session.token)
         return self.redirect(req)
 
-class ManageMediaHandler(BaseHandler):
-    @coroutine
-    def get(self):
-
-        @in_thread
-        def receive_data():
-            return BroadcastTransmitter.select()
-
-        bts = yield receive_data
-        self.render('manage-media/index.html', broadcast_transmitters=bts)
-
-    @coroutine
-    def post(self):
-        action = self.get_argument('action')
-        name = self.get_argument('name')
-
-        @in_thread
-        def update_data():
-            if action == 'add':
-                url = self.get_argument('url')
-                bt = BroadcastTransmitter.create(url=url, name=name)
-                bt.save()
-            elif action == 'delete':
-                bt = BroadcastTransmitter.get(name=name)
-                bt.delete_instance()
-
-        yield update_data
-
-        self.redirect('manage-media')

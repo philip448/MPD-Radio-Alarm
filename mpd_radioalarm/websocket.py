@@ -6,10 +6,10 @@ import jsonschema
 from mpd_radioalarm.handler import BaseHandler as RequestBaseHandler
 from mpd_radioalarm.data import in_thread
 from mpd_radioalarm import config
-from mpd_radioalarm.plugins import import_plugins
 from mpd_radioalarm.eventhook import EventHook
 
 _commands = {}
+print('commands altered')
 _topics = {}
 
 def add_command(name, func):
@@ -53,8 +53,10 @@ def update_topic(topic, update):
     for sock in _topics[topic]:
         sock.write_message(str_msg)
 
+
 def add_topic(topic):
     _topics[topic] = []
+
 
 def subscribe(socket, topic):
     socket.on_socket_close.addHandler(lambda : _topics[topic].remove(socket))
@@ -66,7 +68,6 @@ def subscribe(socket, topic):
 
 
 add_command('subscribe', subscribe)
-import_plugins();
 
 class WebSocketHandler(TornWebSocketHandler):
     def initialize(self):
@@ -80,7 +81,7 @@ class WebSocketHandler(TornWebSocketHandler):
         def get_user():
             return RequestBaseHandler.get_current_user(self)
 
-        user = yield get_user
+        user = yield get_user()
 
         if not user:
             return self.close()
@@ -90,7 +91,7 @@ class WebSocketHandler(TornWebSocketHandler):
     @coroutine
     def on_message(self, message):
         if config.DEBUG:
-            print(message)
+            print('in: ' + message)
 
         msg = json.loads(message)
         jsonschema.validate(msg, MESSAGE_FORMAT)
@@ -104,7 +105,7 @@ class WebSocketHandler(TornWebSocketHandler):
         def t_wrap():
             return _commands[cmd](self, **args)
 
-        res = yield t_wrap
+        res = yield t_wrap()
 
         response = {
             "type": "response",

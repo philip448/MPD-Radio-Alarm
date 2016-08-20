@@ -6,8 +6,7 @@ from mpd_radioalarm import config
 from mpd_radioalarm.handler import *
 from mpd_radioalarm.data.model import User
 from mpd_radioalarm.data import password
-from mpd_radioalarm.websocket import WebSocketHandler
-from mpd_radioalarm.plugins import import_plugins
+from mpd_radioalarm import websocket
 
 
 def create_root_user():
@@ -21,26 +20,31 @@ def create_root_user():
     u.save()
 
 
-def make_app():
-
-    create_root_user()
-    app = Application(
-        [
+class Server(Application):
+    def __init__(self):
+        create_root_user()
+        super().__init__([
             (r'/', WebHandler),
             (r'/login', LoginHandler),
-            (r'/play', PlayHandler),
-            (r'/ws', WebSocketHandler),
-            (r'/manage-media', ManageMediaHandler)
+            (r'/ws', websocket.WebSocketHandler)
         ],
-        static_path=config.STATIC_FILE_PATH,
-        template_path=config.TEMPLATE_PATH,
-        debug=config.DEBUG,
-        cookie_secret=config.COOKIE_SECRET
-    )
+            static_path=config.STATIC_FILE_PATH,
+            template_path=config.TEMPLATE_PATH,
+            debug=config.DEBUG,
+            cookie_secret=config.COOKIE_SECRET)
 
-    return app
+    def add_handler(self, url, handler):
+        self.add_handlers(r'.*', [(url, handler)])
 
-if __name__ == '__main__':
-    app = make_app()
-    app.listen(config.HTTP_PORT)
-    IOLoop.current().start()
+    def update_topic(self, topic, update):
+        websocket.update_topic(topic, update)
+
+    def add_topic(self, topic):
+        websocket.add_topic(topic)
+
+    def add_command(self, name, func):
+        websocket.add_command(name, func)
+
+    def start(self, port=config.HTTP_PORT):
+        self.listen(port)
+        IOLoop.current().start()
