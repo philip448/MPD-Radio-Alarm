@@ -4,9 +4,9 @@ import json
 import jsonschema
 
 from mpd_radioalarm.handler import BaseHandler as RequestBaseHandler
-from mpd_radioalarm.data import in_thread
+from mpd_radioalarm.concurrent import in_thread
 from mpd_radioalarm import config
-from mpd_radioalarm.eventhook import EventHook
+from mpd_radioalarm import EventHook
 
 _commands = {}
 print('commands altered')
@@ -68,6 +68,7 @@ def subscribe(socket, topic):
 
 
 add_command('subscribe', subscribe)
+
 
 class WebSocketHandler(TornWebSocketHandler):
     def initialize(self):

@@ -1,1 +1,0 @@
-from .plugin_mpd import MPDPlugin

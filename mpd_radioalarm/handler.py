@@ -1,11 +1,11 @@
-from tornado.web import RequestHandler
 from tornado.gen import coroutine
-from peewee import DoesNotExist
+from tornado.web import RequestHandler
 
+from model import *
+from mpd_radioalarm.concurrent import in_thread
+from mpd_radioalarm import password
 from mpd_radioalarm.error import *
-from mpd_radioalarm.data.model import *
-from mpd_radioalarm.data import in_thread, password
-from mpd_radioalarm import config
+
 
 class BaseHandler(RequestHandler):
     def initialize(self):

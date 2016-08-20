@@ -1,12 +1,10 @@
-from tornado.web import Application
 from tornado.ioloop import IOLoop
-from peewee import DoesNotExist
+from tornado.web import Application
 
-from mpd_radioalarm import config
-from mpd_radioalarm.handler import *
-from mpd_radioalarm.data.model import User
-from mpd_radioalarm.data import password
+from model import User
 from mpd_radioalarm import websocket
+from mpd_radioalarm import password
+from mpd_radioalarm.handler import *
 
 
 def create_root_user():

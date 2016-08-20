@@ -6,25 +6,34 @@ from playhouse.shortcuts import model_to_dict
 
 from mpd_radioalarm.plugins import PluginBase
 from .handler import ManageMediaHandler, PlayHandler
+from . import model
 
 MAX_RECONNECT = 10
 
 
 class MPDPlugin(PluginBase):
     def initialize(self):
-        self.mpd_client = MPDClient()
-        self.mpd_client.timeout = 10
-        self.mpd_client.idletimeout = None
-        self.mpd_client.connect(self.plugin_api.config.MPD_HOST, self.plugin_api.config.MPD_PORT)
-
-        self.mpd_client.clear()
-        self.playlist = []
-
-        self.reload_playlist()
         self._initialize_commands()
         self._initialize_topics()
         self._initialize_handlers()
+        self._initialize_models()
+
+        self.mpd_client = MPDClient()
+        self.mpd_client.timeout = 10
+        self.mpd_client.idletimeout = None
+        self.mpd_client.connect(self.config.MPD_HOST, self.config.MPD_PORT)
+
+        self.mpd_client.clear()
+        self.playlist = []
+        self.reload_playlist()
         self._start_periodic_song_updates()
+
+        ManageMediaHandler.playlist_changed.addHandler(self.reload_playlist)
+
+    def _initialize_models(self):
+        self.model.create_table(model.BroadcastTransmitter)
+        self.model.create_table(model.Alarm)
+        self.model.create_table(model.MP3File)
 
     def _initialize_commands(self):
         self.server.add_command('mpd.play', lambda socket: self._song_command(self.mpd_client.play))
@@ -80,7 +89,7 @@ class MPDPlugin(PluginBase):
 
         self.mpd_client.clear()
 
-        for i in self.plugin_api.model.BroadcastTransmitter.select():
+        for i in model.BroadcastTransmitter.select():
             self.mpd_client.add(i.url)
             self.playlist.append(model_to_dict(i))
 
