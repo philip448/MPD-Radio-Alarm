@@ -15,7 +15,7 @@ class ManageMediaHandler(PluginBase.handler.BaseHandler):
             return BroadcastTransmitter.select()
 
         bts = yield receive_data()
-        self.render('manage-media/index.html', broadcast_transmitters=bts)
+        self.render('plugin_mpd/manage-media.html', broadcast_transmitters=bts)
 
     @PluginBase.concurrent.coroutine
     def post(self):
@@ -39,5 +39,5 @@ class ManageMediaHandler(PluginBase.handler.BaseHandler):
 
 class PlayHandler(PluginBase.handler.BaseHandler):
     def get(self):
-        self.render('play.html')
+        self.render('plugin_mpd/play.html')
 

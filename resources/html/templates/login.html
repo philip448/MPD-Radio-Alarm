@@ -7,6 +7,7 @@
 {% block content %}
     <form class="form-signin" method="post" action="login">
         <input name="req" type="hidden" value="{{ req }}">
+        <input name="action" type="hidden" value="login">
         <h2 class="form-signin-heading">Please sign in</h2>
         <div class="form-group">
             <label for="inputEmail" class="sr-only">Email address</label>

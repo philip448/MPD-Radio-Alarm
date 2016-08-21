@@ -21,28 +21,29 @@ def create_root_user():
 class Server(Application):
     def __init__(self):
         create_root_user()
+        rpc_server = websocket.RPCServer()
         super().__init__([
             (r'/', WebHandler),
             (r'/login', LoginHandler),
-            (r'/ws', websocket.WebSocketHandler)
+            (r'/admin', AdminHandler),
+            (r'/admin/user', AdminUserHandler),
+            (r'/ws', websocket.WebSocketHandler, dict(rpc_server=rpc_server))
         ],
             static_path=config.STATIC_FILE_PATH,
             template_path=config.TEMPLATE_PATH,
             debug=config.DEBUG,
             cookie_secret=config.COOKIE_SECRET)
 
-    def add_handler(self, url, handler):
-        self.add_handlers(r'.*', [(url, handler)])
-
-    def update_topic(self, topic, update):
-        websocket.update_topic(topic, update)
-
-    def add_topic(self, topic):
-        websocket.add_topic(topic)
-
-    def add_command(self, name, func):
-        websocket.add_command(name, func)
+        # Wrap methods for access
+        self.add_command = rpc_server.add_command
+        self.remove_command = rpc_server.remove_command
+        self.add_topic = rpc_server.add_topic
+        self.remove_topic = rpc_server.remove_topic
+        self.update_topic = rpc_server.update_topic
 
     def start(self, port=config.HTTP_PORT):
         self.listen(port)
         IOLoop.current().start()
+
+    def add_handler(self, url, handler):
+        self.add_handlers(r'.*', [(url, handler)])

@@ -13,22 +13,35 @@ MAX_RECONNECT = 10
 
 class MPDPlugin(PluginBase):
     def initialize(self):
+        self.mpd_client = MPDClient()
+        self.playlist = []
+
         self._initialize_commands()
         self._initialize_topics()
         self._initialize_handlers()
         self._initialize_models()
-
-        self.mpd_client = MPDClient()
-        self.mpd_client.timeout = 10
-        self.mpd_client.idletimeout = None
-        self.mpd_client.connect(self.config.MPD_HOST, self.config.MPD_PORT)
-
-        self.mpd_client.clear()
-        self.playlist = []
-        self.reload_playlist()
-        self._start_periodic_song_updates()
+        self._initialize_mpd_client()
 
         ManageMediaHandler.playlist_changed.addHandler(self.reload_playlist)
+
+    def _initialize_mpd_client(self):
+        try:
+            self.mpd_client.timeout = 10
+            self.mpd_client.idletimeout = None
+            self.mpd_client.connect(self.config.MPD_HOST, self.config.MPD_PORT)
+            self.reload_playlist()
+            self._start_periodic_song_updates()
+
+
+        except ConnectionRefusedError:
+            print('Connection to MPD Failed. Retrying in 10 secs. ')
+
+            def retry():
+                sleep(10)
+                self._initialize_mpd_client()
+
+            t = Thread(target=retry)
+            t.start()
 
     def _initialize_models(self):
         self.model.create_table(model.BroadcastTransmitter)
@@ -69,7 +82,7 @@ class MPDPlugin(PluginBase):
             val = action(*args)
             return val
         except ConnectionError as ex:
-            self.mpd_client.connect(self.plugin_api.config.MPD_HOST, self.plugin_api.config.MPD_PORT)
+            self.mpd_client.connect(self.config.MPD_HOST, self.config.MPD_PORT)
             if (approach < MAX_RECONNECT):
                 return self._try_action(action, approach + 1)
             else:
@@ -84,7 +97,7 @@ class MPDPlugin(PluginBase):
 
     def reload_playlist(self):
         mpd_status = self.mpd_client.status()
-        status_index = mpd_status.get('index')
+        status_index = mpd_status.get('song')
         status_state = mpd_status['state']
 
         self.mpd_client.clear()

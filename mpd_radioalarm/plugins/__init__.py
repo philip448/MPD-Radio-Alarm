@@ -42,3 +42,22 @@ class PluginBase(object):
     def initialize(self):
         raise NotImplementedError('Override initialize')
 
+    def get_information(self):
+        raise NotImplementedError('Override get_information')
+
+
+class PluginInformation(object):
+    def __init__(self,
+                 name, version, vendor,
+                 template_dir):
+        self.name = name
+        self.version = version
+        self.vendor = vendor
+        self.template_dir = template_dir
+
+class PluginManager(object):
+    def __init__(self):
+        pass
+
+
+
